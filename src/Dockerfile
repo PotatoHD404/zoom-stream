@@ -1,23 +1,24 @@
 FROM ubuntu:20.04
 
-ENV HOME=/home/zoomrec \
+ENV HOME=/home/zoomstream \
     TZ=Europe/Berlin \
     TERM=xfce4-terminal \
     START_DIR=/start \
     DEBIAN_FRONTEND=noninteractive \
-    VNC_RESOLUTION=1024x576 \
+    VNC_RESOLUTION=1920x1080 \
     VNC_COL_DEPTH=24 \
-    VNC_PW=zoomrec \
+    VNC_PW=zoomstream \
     VNC_PORT=5901 \
     DISPLAY=:1
 
 # Add user
-RUN useradd -ms /bin/bash zoomrec -d ${HOME}
+RUN useradd -ms /bin/bash zoomstream -d ${HOME}
 WORKDIR ${HOME}
 
-ADD res/requirements.txt ${HOME}/res/requirements.txt
+ADD requirements.txt ${HOME}/res/requirements.txt
 
 # Install some tools
+# add-apt-repository ppa:obsproject/obs-studio && \
 RUN apt-get update && \
     apt-get install --no-install-recommends -y \
         apt \
@@ -31,6 +32,7 @@ RUN apt-get update && \
         wget \
         locales \
         bzip2 \
+        x264 \
         tzdata && \
 # Generate locales for en_US.UTF-8
     locale-gen en_US.UTF-8 && \
@@ -90,6 +92,9 @@ RUN apt-get update && \
     apt-get install --no-install-recommends -y \
         ffmpeg \
         libavcodec-extra && \
+## Install OBS \
+#    apt-get install --no-install-recommends -y \
+#        obs-studio && \
 # Install Python dependencies for script
     apt-get install --no-install-recommends -y \
         python3 \
@@ -108,12 +113,12 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # Allow access to pulseaudio
-RUN adduser zoomrec pulse-access
+RUN adduser zoomstream pulse-access
 
-USER zoomrec
+USER zoomstream
 
 # Add xfce resources
-ADD res/xfce/ ${HOME}/
+ADD res/xfce ${HOME}/
 ADD res/zoom.desktop ${HOME}/Desktop/
 ADD res/vlc.desktop ${HOME}/Desktop/
 
@@ -121,17 +126,17 @@ ADD res/vlc.desktop ${HOME}/Desktop/
 ADD res/entrypoint.sh ${START_DIR}/entrypoint.sh
 
 # Add python script with resources
-ADD zoomrec.py ${HOME}/
-ADD res/img ${HOME}/img
+ADD zoomstream/zoomstream.py ${HOME}/
+ADD zoomstream/img ${HOME}/img
 
 # Set permissions
 USER 0
 RUN chmod a+x ${START_DIR}/entrypoint.sh && \
     chmod -R a+rw ${START_DIR} && \
-    chown -R zoomrec:zoomrec ${HOME} && \
+    chown -R zoomstream:zoomstream ${HOME} && \
     find ${HOME}/ -name '*.sh' -exec chmod -v a+x {} + && \
     find ${HOME}/ -name '*.desktop' -exec chmod -v a+x {} +
 
 EXPOSE ${VNC_PORT}
-USER zoomrec
+USER zoomstream
 CMD ${START_DIR}/entrypoint.sh

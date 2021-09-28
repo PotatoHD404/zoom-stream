@@ -1,0 +1,15 @@
+version: "3"
+
+
+services:
+  zoom-stream:
+    build: ./src
+    environment:
+      - TZ=Europe/Moscow
+    restart: unless-stopped
+    volumes:
+      - ./recordings:/home/zoomstream/recordings
+      - ./example/meetings.csv:/home/zoomstream/meetings.csv:ro
+      - ./example/youtube.key:/home/zoomstream/youtube.key:ro
+    ports:
+      - "5901:5901"
